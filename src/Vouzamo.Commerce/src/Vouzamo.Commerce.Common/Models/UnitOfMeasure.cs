@@ -88,49 +88,28 @@ namespace Vouzamo.Commerce.Common.Models
 
     public interface IInventoryManager
     {
-        Inventory SplitInventory(Inventory inventory, int quantity);
-        Inventory ReceiveInventory(Material material, Source source, int quantity, decimal unitCost);
-        Inventory AssembleInventory(Material material, IEnumerable<Inventory> inventory, int quantity);
+        IInventory SplitInventory(IInventory inventory, int quantity);
+        IInventory ReceiveInventory(Material material, Source source, int quantity, decimal unitCost);
+        IInventory AssembleInventory(Material material, Source source, int quantity, IEnumerable<IInventory> inventory);
     }
 
     public class InventoryManager : IInventoryManager
     {
-        public Inventory SplitInventory(Inventory inventory, int quantity)
+        public IInventory SplitInventory(IInventory inventory, int quantity)
         {
             return inventory;
         }
 
-        public Inventory ReceiveInventory(Material material, Source source, int quantity, decimal unitCost)
+        public IInventory ReceiveInventory(Material material, Source source, int quantity, decimal unitCost)
         {
             return new Inventory(material.Id, source.Id, quantity, unitCost);
         }
 
-        public Inventory AssembleInventory(Material material, Source source, IEnumerable<Inventory> inventory, int quantity)
+        public IInventory AssembleInventory(Material material, Source source, int quantity, IEnumerable<IInventory> inventory)
         {
-            var source = new Source("");
+            // Split the inventory to accomodate the quantity and bill of materials
 
-            var remainingInventory = inventory.ToList();
-
-            while (quantity > 0)
-            {
-                var assemblyInventories = new List<Inventory>();
-
-                foreach (var assemblyMaterial in material.BillOfMaterials)
-                {
-                    var assemblyInventory = remainingInventory.FirstOrDefault(x => x.Id == assemblyMaterial.Key);
-
-                    if (assemblyInventory.Quantity >= assemblyMaterial.Value)
-                    {
-                        assemblyInventories.Add(SplitInventory(assemblyInventory, assemblyMaterial.Value));
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                quantity--;
-            }
+            return new AssembledInventory(material.Id, source.Id, quantity, inventory);
         }
     }
 }
